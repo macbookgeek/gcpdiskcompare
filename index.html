@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Cloud Disk Performance Calculator</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            background-color: #4285f4;
+            color: #ffffff;
+            padding: 20px 0;
+            margin: 0;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        label, input, button {
+            display: block;
+            margin: 10px auto;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4285f4;
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #4285f4;
+            color: #ffffff;
+        }
+
+        td:nth-child(2), td:nth-child(4) {
+            background-color: #f4f4f4;
+        }
+
+        td:nth-child(3), td:nth-child(5) {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Cloud Disk Performance Calculator</h1>
+    
+    <label for="diskCapacity">Enter Disk Capacity (in GB):</label>
+    <input type="number" id="diskCapacity" placeholder="Disk Capacity (GB)">
+    
+    <label for="vmCores">Enter VM Core Count:</label>
+    <input type="number" id="vmCores" placeholder="VM Core Count">
+    
+    <button onclick="calculatePerformance()">Calculate</button>
+    
+    <h2>Performance Comparison (Balanced PD vs. SSD PD)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Performance Metric</th>
+                <th>Balanced PD</th>
+                <th>SSD PD</th>
+                <th>Percentage Difference</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Read IOPS</td>
+                <td id="minBalancedReadIOPS"></td>
+                <td id="minSsdReadIOPS"></td>
+                <td id="percentageReadIOPS"></td>
+            </tr>
+            <tr>
+                <td>Write IOPS</td>
+                <td id="minBalancedWriteIOPS"></td>
+                <td id="minSsdWriteIOPS"></td>
+                <td id="percentageWriteIOPS"></td>
+            </tr>
+            <tr>
+                <td>Read Throughput (MB/s)</td>
+                <td id="minBalancedReadThroughput"></td>
+                <td id="minSsdReadThroughput"></td>
+                <td id="percentageReadThroughput"></td>
+            </tr>
+            <tr>
+                <td>Write Throughput (MB/s)</td>
+                <td id="minBalancedWriteThroughput"></td>
+                <td id="minSsdWriteThroughput"></td>
+                <td id="percentageWriteThroughput"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        function calculatePerformance() {
+            const diskCapacity = parseFloat(document.getElementById('diskCapacity').value);
+            const vmCores = parseInt(document.getElementById('vmCores').value);
+
+            const balancedReadIOPS = diskCapacity * 6;
+            const ssdReadIOPS = diskCapacity * 30;
+
+            const balancedWriteIOPS = diskCapacity * 6;
+            const ssdWriteIOPS = diskCapacity * 30;
+
+            const balancedThroughput = diskCapacity * 0.12;
+            const ssdThroughput = diskCapacity * 0.28;
+
+            let minBalancedReadIOPS = Math.min(balancedReadIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+            let minBalancedWriteIOPS = Math.min(balancedWriteIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+            let minBalancedReadThroughput = Math.min(balancedThroughput, 1200);
+            let minBalancedWriteThroughput = Math.min(400, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+
+            let minSsdReadIOPS = Math.min(ssdReadIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+            let minSsdWriteIOPS = Math.min(ssdWriteIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+            let minSsdReadThroughput = Math.min(ssdThroughput, 1200);
+            let minSsdWriteThroughput = Math.min(1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+
+            // Calculate percentage difference
+            const percentageReadIOPS = ((minSsdReadIOPS - minBalancedReadIOPS) / minBalancedReadIOPS * 100).toFixed(2);
+            const percentageWriteIOPS = ((minSsdWriteIOPS - minBalancedWriteIOPS) / minBalancedWriteIOPS * 100).toFixed(2);
+            const percentageReadThroughput = ((minSsdReadThroughput - minBalancedReadThroughput) / minBalancedReadThroughput * 100).toFixed(2);
+            const percentageWriteThroughput = ((minSsdWriteThroughput - minBalancedWriteThroughput) / minBalancedWriteThroughput * 100).toFixed(2);
+
+            document.getElementById('minBalancedReadIOPS').innerText = minBalancedReadIOPS;
+            document.getElementById('minSsdReadIOPS').innerText = minSsdReadIOPS;
+            document.getElementById('minBalancedWriteIOPS').innerText = minBalancedWriteIOPS;
+            document.getElementById('minSsdWriteIOPS').innerText = minSsdWriteIOPS;
+            document.getElementById('minBalancedReadThroughput').innerText = minBalancedReadThroughput;
+            document.getElementById('minSsdReadThroughput').innerText = minSsdReadThroughput;
+            document.getElementById('minBalancedWriteThroughput').innerText = minBalancedWriteThroughput;
+            document.getElementById('minSsdWriteThroughput').innerText = minSsdWriteThroughput;
+
+            document.getElementById('percentageReadIOPS').innerText = percentageReadIOPS + '%';
+            document.getElementById('percentageWriteIOPS').innerText = percentageWriteIOPS + '%';
+            document.getElementById('percentageReadThroughput').innerText = percentageReadThroughput + '%';
+            document.getElementById('percentageWriteThroughput').innerText = percentageWriteThroughput + '%';
+        }
+    </script>
+</body>
+</html>
+
