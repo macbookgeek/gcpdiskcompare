@@ -25,17 +25,22 @@
             margin-top: 20px;
         }
 
+        label {
+            width: 80%;
+        }
+
         label, input, button {
             display: block;
             margin: 10px auto;
         }
 
         input[type="number"] {
-            width: 100%;
+            width: 80%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
+            margin: 0 auto; 
         }
 
         button {
@@ -126,7 +131,7 @@
     <script>
         function calculatePerformance() {
             const diskCapacity = parseFloat(document.getElementById('diskCapacity').value);
-            const vmCores = parseInt(document.getElementById('vmCores').value);
+            let vmCores = parseInt(document.getElementById('vmCores').value);
 
             const balancedReadIOPS = diskCapacity * 6;
             const ssdReadIOPS = diskCapacity * 30;
@@ -134,18 +139,68 @@
             const balancedWriteIOPS = diskCapacity * 6;
             const ssdWriteIOPS = diskCapacity * 30;
 
-            const balancedThroughput = diskCapacity * 0.12;
-            const ssdThroughput = diskCapacity * 0.28;
+            const balancedThroughput = diskCapacity * 0.28;
+            const ssdThroughput = diskCapacity * 0.48;
 
-            let minBalancedReadIOPS = Math.min(balancedReadIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
-            let minBalancedWriteIOPS = Math.min(balancedWriteIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
-            let minBalancedReadThroughput = Math.min(balancedThroughput, 1200);
-            let minBalancedWriteThroughput = Math.min(400, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+            let balancedReadIOPSbyCore, balancedWriteIOPSbyCore, balancedReadThroughputByCore, balancedWriteThroughputByCore;
+            let SsdReadIOPSbyCore, SsdWriteIOPSbyCore, SsdReadThroughputByCore, SsdWriteThroughputByCore;
 
-            let minSsdReadIOPS = Math.min(ssdReadIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
-            let minSsdWriteIOPS = Math.min(ssdWriteIOPS, 1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
-            let minSsdReadThroughput = Math.min(ssdThroughput, 1200);
-            let minSsdWriteThroughput = Math.min(1200, vmCores >= 2 && vmCores <= 7 ? 240 : (vmCores >= 8 && vmCores <= 15 ? 800 : (vmCores >= 16 && vmCores <= 31 ? 1200 : 1200)));
+            if (vmCores <= 7) {
+                balancedReadIOPSbyCore = 15000
+                balancedWriteIOPSbyCore = 15000
+                balancedReadThroughputByCore = 240
+                balancedWriteThroughputByCore = 240
+                SsdReadIOPSbyCore = 15000
+                SsdWriteIOPSbyCore = 15000
+                SsdReadThroughputByCore = 240
+                SsdWriteThroughputByCore = 240
+            } else if (vmCores >= 8 && vmCores <= 15) {
+                balancedReadIOPSbyCore = 15000
+                balancedWriteIOPSbyCore = 15000
+                balancedReadThroughputByCore = 800
+                balancedWriteThroughputByCore = 800
+                SsdReadIOPSbyCore = 15000
+                SsdWriteIOPSbyCore = 15000
+                SsdReadThroughputByCore = 800
+                SsdWriteThroughputByCore = 800
+            } else if (vmCores >= 16 && vmCores <= 31) {
+                balancedReadIOPSbyCore = 20000
+                balancedWriteIOPSbyCore = 20000
+                balancedReadThroughputByCore = 1200
+                balancedWriteThroughputByCore = 1200
+                SsdReadIOPSbyCore = 25000
+                SsdWriteIOPSbyCore = 25000
+                SsdReadThroughputByCore = 1200
+                SsdWriteThroughputByCore = 1200
+            } else if (vmCores >= 32 && vmCores <= 63) {
+                balancedReadIOPSbyCore = 50000
+                balancedWriteIOPSbyCore = 50000
+                balancedReadThroughputByCore = 1200
+                balancedWriteThroughputByCore = 1200
+                SsdReadIOPSbyCore = 60000
+                SsdWriteIOPSbyCore = 60000
+                SsdReadThroughputByCore = 1200
+                SsdWriteThroughputByCore = 1200
+            } else {
+                balancedReadIOPSbyCore = 80000
+                balancedWriteIOPSbyCore = 80000
+                balancedReadThroughputByCore = 1200
+                balancedWriteThroughputByCore = 1200
+                SsdReadIOPSbyCore = 100000
+                SsdWriteIOPSbyCore = 100000
+                SsdReadThroughputByCore = 1200
+                SsdWriteThroughputByCore = 1200
+            }
+
+            let minBalancedReadIOPS = Math.min(balancedReadIOPS, balancedReadIOPSbyCore);
+            let minBalancedWriteIOPS = Math.min(balancedWriteIOPS, balancedWriteIOPSbyCore);
+            let minBalancedReadThroughput = Math.min(balancedThroughput, balancedReadThroughputByCore, 1200);
+            let minBalancedWriteThroughput = Math.min(balancedThroughput, balancedWriteThroughputByCore, 1200);
+
+            let minSsdReadIOPS = Math.min(ssdReadIOPS, SsdReadIOPSbyCore);
+            let minSsdWriteIOPS = Math.min(ssdWriteIOPS, SsdWriteIOPSbyCore);
+            let minSsdReadThroughput = Math.min(ssdThroughput, SsdReadThroughputByCore, 1200);
+            let minSsdWriteThroughput = Math.min(ssdThroughput, SsdWriteThroughputByCore, 1200);
 
             // Calculate percentage difference
             const percentageReadIOPS = ((minSsdReadIOPS - minBalancedReadIOPS) / minBalancedReadIOPS * 100).toFixed(2);
@@ -170,4 +225,3 @@
     </script>
 </body>
 </html>
-
